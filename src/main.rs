@@ -17,7 +17,7 @@ async fn move_file(
     let _guard = permits.acquire().await?;
 
     let progress_style = ProgressStyle::with_template(
-        "[{bytes}/{total_bytes}] {wide_bar} {msg:70!} {binary_bytes_per_sec}",
+        "[{binary_bytes_per_sec}] {wide_bar} {msg:70!} {bytes}/{total_bytes}",
     )?;
 
     if !std::fs::exists(&src_path)? {
