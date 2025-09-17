@@ -4,8 +4,11 @@ This project aims to provide an asynchronous and robust `mv` implementation, esp
 
 ## Features
 
-* Asynchronous moving: `mvv` could execute move tasks concurrently, which opens multiple connections when the source or destination is a mounted net drive.
-* Resumable transfer: after the moving process is interrupted (by user, insufficient disk space, unexpected closed connection, etc.), `mvv` continues from the last byte not moved. Although the associated files are still checked byte-by-byte, this is still faster under most conditions.
+* **Asynchronous moving:** `mvv` could execute move tasks concurrently, which opens multiple connections when the source or destination is a mounted net drive.
+* **Resumable transfer:** after the moving process is interrupted (by user, insufficient disk space, unexpected closed connection, etc.), `mvv` continues from the last byte not moved. Although the associated files are still checked byte-by-byte, this is still faster under most conditions.
+* **Instant removal:** source files are instantly removed after being successfully copied to the target location. This prevents the program from using up all the remaining disk space when you only have limited space.
+
+The last point is not equivalent to `mv --no-clobber`, because in that case `mv` leaves partially copied files damaged.
 
 ## Installation
 
