@@ -196,7 +196,11 @@ async fn main() -> Result<()> {
         ));
     }
 
-    tokio::fs::remove_dir_all(src_path).await?;
+    if src_path.is_file() {
+        tokio::fs::remove_file(src_path).await?;
+    } else if src_path.is_dir() {
+        tokio::fs::remove_dir_all(src_path).await?;
+    }
 
     multi_progress.println("move complete")?;
     Ok(())
