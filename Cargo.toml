@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.99"
+indicatif = { version = "0.18.0", features = ["tokio"] }
+tokio = { version = "1.47.1", features = ["full"] }
+walkdir = "2.5.0"
