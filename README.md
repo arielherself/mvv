@@ -2,6 +2,11 @@
 
 This project aims to provide an asynchronous and robust `mv` implementation, especially for moving directories between local and remote machines with a poor network connection. The syntax is not compatible with `mv`.
 
+## Features
+
+* Asynchronous moving: `mvv` could execute move tasks concurrently, which opens multiple connections when the source or destination is a mounted net drive.
+* Resumable transfer: after the moving process is interrupted (by user, insufficient disk space, unexpected closed connection, etc.), `mvv` continues from the last byte not moved. Although the associated files are still checked byte-by-byte, this is still faster under most conditions.
+
 ## Installation
 
 ```bash
