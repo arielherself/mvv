@@ -1,3 +1,4 @@
+use std::io::ErrorKind;
 use std::sync::Arc;
 use std::{env::args, path::Path};
 
@@ -66,13 +67,25 @@ async fn move_file(
                 let curr_dest_read = dest_file.read(&mut dest_buf[..read_max_size]).await?;
 
                 if curr_src_read < curr_dest_read {
-                    src_file
+                    if let Err(e) = src_file
                         .read_exact(&mut src_buf[curr_src_read..curr_dest_read])
-                        .await?;
+                        .await
+                    {
+                        if e.kind() == ErrorKind::UnexpectedEof {
+                            break;
+                        }
+                        return Err(e.into());
+                    }
                 } else if curr_src_read > curr_dest_read {
-                    dest_file
+                    if let Err(e) = dest_file
                         .read_exact(&mut dest_buf[curr_dest_read..curr_src_read])
-                        .await?;
+                        .await
+                    {
+                        if e.kind() == ErrorKind::UnexpectedEof {
+                            break;
+                        }
+                        return Err(e.into());
+                    }
                 }
 
                 let curr_read = curr_src_read.max(curr_dest_read);
