@@ -31,7 +31,14 @@ async fn move_file(
         tokio::fs::create_dir_all(dest_parent_path).await?;
     }
 
-    let (init_offset, mut progress_bar) = if std::fs::exists(&dest_path)? {
+    let progress_bar = multi_progress.add(ProgressBar::new(0));
+    progress_bar.set_style(progress_style.clone());
+    progress_bar.set_message(format!(
+        "preparing {}",
+        src_path.as_ref().file_name().unwrap().display()
+    ));
+
+    let init_offset = if std::fs::exists(&dest_path)? {
         let buf_size = buf_size / 2;
         let mut src_buf = vec![0; buf_size];
         let mut dest_buf = vec![0; buf_size];
@@ -45,49 +52,56 @@ async fn move_file(
         let min_size = src_size.min(dest_size);
         let mut read = 0;
 
-        let progress_bar = multi_progress.add(ProgressBar::new(src_size as u64));
-        progress_bar.set_style(progress_style.clone());
+        progress_bar.set_length(min_size as u64);
         progress_bar.set_message(format!(
             "checking {}",
             src_path.as_ref().file_name().unwrap().display()
         ));
 
-        while read < min_size {
-            let read_max_size = src_buf.len().min(min_size - read);
+        if min_size != 0 {
+            while read < min_size {
+                let read_max_size = src_buf.len().min(min_size - read);
 
-            let curr_src_read = src_file.read(&mut src_buf[..read_max_size]).await?;
-            let curr_dest_read = dest_file.read(&mut dest_buf[..read_max_size]).await?;
+                let curr_src_read = src_file.read(&mut src_buf[..read_max_size]).await?;
+                let curr_dest_read = dest_file.read(&mut dest_buf[..read_max_size]).await?;
 
-            if curr_src_read < curr_dest_read {
-                src_file
-                    .read_exact(&mut src_buf[curr_src_read..curr_dest_read])
-                    .await?;
-            } else if curr_src_read > curr_dest_read {
-                dest_file
-                    .read_exact(&mut dest_buf[curr_dest_read..curr_src_read])
-                    .await?;
-            }
-
-            let curr_read = curr_src_read.max(curr_dest_read);
-
-            for (&x, &y) in src_buf[..curr_read]
-                .iter()
-                .zip(dest_buf[..curr_read].iter())
-            {
-                if x != y {
-                    break;
+                if curr_src_read < curr_dest_read {
+                    src_file
+                        .read_exact(&mut src_buf[curr_src_read..curr_dest_read])
+                        .await?;
+                } else if curr_src_read > curr_dest_read {
+                    dest_file
+                        .read_exact(&mut dest_buf[curr_dest_read..curr_src_read])
+                        .await?;
                 }
-                read += 1;
+
+                let curr_read = curr_src_read.max(curr_dest_read);
+
+                for (&x, &y) in src_buf[..curr_read]
+                    .iter()
+                    .zip(dest_buf[..curr_read].iter())
+                {
+                    if x != y {
+                        break;
+                    }
+                    read += 1;
+                }
+
+                progress_bar.inc(curr_read as u64);
             }
         }
 
-        (read as u64, Some(progress_bar))
+        read as u64
     } else {
-        (0u64, None)
+        0u64
     };
 
     let mut src_file = tokio::fs::File::open(&src_path).await?;
     let src_size = src_file.metadata().await?.len() as usize;
+    progress_bar.set_message(format!(
+        "seeking {}",
+        src_path.as_ref().file_name().unwrap().display()
+    ));
     src_file.seek(std::io::SeekFrom::Start(init_offset)).await?;
 
     let mut dest_file = tokio::fs::File::options()
@@ -99,12 +113,7 @@ async fn move_file(
         .seek(std::io::SeekFrom::Start(init_offset))
         .await?;
 
-    if progress_bar.is_none() {
-        progress_bar = Some(multi_progress.add(ProgressBar::new(src_size as u64)));
-    }
-    let progress_bar = progress_bar.unwrap();
-
-    progress_bar.set_style(progress_style);
+    progress_bar.set_length(src_size as u64);
     progress_bar.set_position(init_offset);
     progress_bar.set_message(format!(
         "copying {:?}",
