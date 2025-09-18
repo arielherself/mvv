@@ -40,6 +40,6 @@ This usage also follows the rule mentioned above. For example, `mvv ./src/some_f
 
 ## Caveats
 
-* It's actually `cp`+`rm`, so the maximum disk usage could be up to twice the total size.
+* It's actually `cp`+`rm`, so the maximum disk usage could be up to twice the total size. For single files, it's consistent with `mv` when moving between two filesystems. For directories, the usage is total size plus one single file size, which is smaller than `mv`.
 * Mode bits are not preserved.
 * Symlinks are not currently supported.
