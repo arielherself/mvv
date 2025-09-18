@@ -35,7 +35,7 @@ async fn move_file(
     let progress_bar = multi_progress.add(ProgressBar::new(0));
     progress_bar.set_style(progress_style.clone());
     progress_bar.set_message(format!(
-        "preparing {}",
+        "preparing \"{}\"",
         src_path.as_ref().file_name().unwrap().display()
     ));
 
@@ -55,7 +55,7 @@ async fn move_file(
 
         progress_bar.set_length(min_size as u64);
         progress_bar.set_message(format!(
-            "checking {}",
+            "checking \"{}\"",
             src_path.as_ref().file_name().unwrap().display()
         ));
 
@@ -112,7 +112,7 @@ async fn move_file(
     let mut src_file = tokio::fs::File::open(&src_path).await?;
     let src_size = src_file.metadata().await?.len() as usize;
     progress_bar.set_message(format!(
-        "seeking {}",
+        "seeking \"{}\"",
         src_path.as_ref().file_name().unwrap().display()
     ));
     src_file.seek(std::io::SeekFrom::Start(init_offset)).await?;
