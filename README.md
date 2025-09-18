@@ -11,7 +11,7 @@ This project aims to provide an asynchronous and robust `mv` implementation, esp
 * **Instant removal:** source files are instantly removed after being successfully copied to the target location. This prevents the program from using up all the remaining disk space when you only have limited space.
 * **Progress bar**: intuitive interface for viewing progress.
 
-The last point is not equivalent to `mv --no-clobber`, because in that case `mv` leaves partially copied files damaged.
+The 3rd point is not equivalent to `mv --no-clobber`, because in that case `mv` leaves partially copied files damaged.
 
 ## Installation
 
